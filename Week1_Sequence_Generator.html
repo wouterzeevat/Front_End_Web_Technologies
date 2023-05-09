@@ -1,4 +1,3 @@
-
 <!-- saved from url=(0060)https://bioinf.nl/~marcelk/fewt/examples/wk1-assignment.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
     <title>Week 1 - Sequence Generator</title>
@@ -24,7 +23,7 @@
     </table>
     <script>
 
-      const length = 30;
+      const length = 3;
       
       class Sequence {
         constructor(len) {
@@ -32,13 +31,16 @@
           this.sequence = this.generate_sequence();
         }
 
+        /* Generates sequence that always ends with stop and starts
+           with a start codon */
         generate_sequence() {
           const options = ["A", "T", "C", "G"];
-          let seq = "";
+          let seq = "ATG";
           for (let i = 0; i < length; i++) {
             seq += options[Math.floor(Math.random() * options.length)];
           } 
-          return seq;
+          let stop = ["TAG", "TAA", "TGA"];
+          return seq + stop[Math.floor(Math.random() * stop.length)];;
         }
 
         translate_protein() {
@@ -88,8 +90,8 @@
 
         get_correct_length(length) {
           if (length % 3 != 0) {
-            if (length < 3) {
-              length = 3;
+            if (length < 0) {
+              length = 0;
             } else {
               if ((length - 1) % 3 == 0) {
                 length -= 1;
