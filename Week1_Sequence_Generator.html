@@ -4,7 +4,7 @@
   </head>
   <body>
     <h2>Sequence:</h2>
-    <h2 id="sequence"></h2>
+    <p id="sequence"></p>
     
     <h2>Statistics:</h2>
     <table>
@@ -23,7 +23,7 @@
     </table>
     <script>
 
-      const length = 3;
+      const length = 3000;
       
       class Sequence {
         constructor(len) {
@@ -128,6 +128,15 @@
     
     #sequence {
       color: rgb(104, 178, 100);
+      max-width: 80ch;
+      width: 100%;
+      overflow-wrap: break-word;
+    }
+
+    #protein {
+      max-width: 80ch;
+      width: 100%;
+      overflow-wrap: break-word;
     }
 
     table {
@@ -157,6 +166,8 @@
     td {
       padding: 20px;
     }
+
+
     </style>
 
 
