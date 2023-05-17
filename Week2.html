@@ -12,7 +12,7 @@
       <input type="number" id="sequenceLength" name="sequenceLength" min="1" max="1000000" required>
       <input type="submit" value="Generate" class="btn">
     </form>
-    <p id="sequence"></p>
+    <div style="height:200px;;overflow-y:auto" id="sequence"></div>
     
     <h3>Statistics:</h3>
     <table>
@@ -26,7 +26,9 @@
       </tr>
       <tr>
         <td>Translated protein</td>
-        <td id="protein">null</td>
+        <td>
+          <div id="protein" style="height:100px;;overflow-y:auto">null</div>
+        </td>
       </tr>
     </table>
     <div class="hidden" id="enzymeCutting">
