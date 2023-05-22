@@ -48,7 +48,7 @@
         </select>
         <input type="submit" value="Search" class="enzyme-btn btn">
       </form>
-
+      <p id="loading"></p>
       <p id="error"></p>
       <div id="multipleEnzymes" class="isBlue"></div>
     </div>
@@ -159,6 +159,7 @@
       }
 
       async function applyEnzyme(name, sequence) {
+        document.getElementById("loading").innerText = "Loading..";
         let urls = [];
         name.split(',').forEach(element => {
           urls.push(`https://bioinf.mocklab.io/api/v2/enzymes/${element}`)
@@ -210,6 +211,7 @@
                 sitePosDict[ele] = positions;
               });
               allPositionsDict[element.name] = sitePosDict;
+              document.getElementById("loading").innerText = "";
             });
 
 
@@ -250,7 +252,8 @@
           })
           .catch(error => {
             console.log('Error:', error);
-            document.getElementById("error").innerText = "You need to run this with node.js or other fixes you dummy!!!!!!!!"
+            document.getElementById("error").innerText = "Error while fetching, This Enzyme can't be loaded in!"
+            document.getElementById("loading").innerText = "";
           });
       }
 
@@ -367,6 +370,10 @@
 
     .highlight {
       color: rgb(50, 100, 180);
+    }
+
+    #loading {
+        color: rgb(50, 100, 180);
     }
 
     </style>
