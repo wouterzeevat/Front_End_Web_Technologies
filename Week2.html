@@ -1,0 +1,363 @@
+<!-- saved from url=(0060)https://bioinf.nl/~marcelk/fewt/examples/wk1-assignment.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>Week 2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">    
+  </head>
+  <body>
+    <h2>Sequence:</h2>
+    <form id="sequenceForm">
+      <label for="sequenceLength">Sequence Length:</label>
+      <input type="number" id="sequenceLength" name="sequenceLength" min="1" max="1000000" required>
+      <input type="submit" value="Generate" class="btn">
+    </form>
+    <p id="sequence"></p>
+    
+    <h3>Statistics:</h3>
+    <table>
+      <tr>
+        <td>residue percentage</td>
+        <td id="percentages">0%</td>
+      </tr>
+      <tr>
+        <td>GC percentage</td>
+        <td id="gc">0%</td>
+      </tr>
+      <tr>
+        <td>Translated protein</td>
+        <td id="protein">null</td>
+      </tr>
+    </table>
+    <div class="hidden" id="enzymeCutting">
+      <h2 id="enzymeTitle">Enzyme cutting</h2>
+      <form id="enzymeForm">
+        <label for="enzymeName">Enzyme:</label>
+        <input type="text" id="enzymeValue" name="enzymeValue" required>
+        <input type="submit" value="Search" class="enzyme-btn btn">
+      </form>
+
+      <p id="error"></p>
+      <div id="multipleEnzymes" class="isBlue"></div>
+    </div>
+    <script>
+      
+      let sequence;
+
+      class Sequence {
+        constructor(length) {
+          this.length = this.get_correct_length(length);
+          this.sequence = this.generate_sequence();
+        }
+
+        /* Generates sequence that always ends with stop and starts
+           with a start codon */
+        generate_sequence() {
+          const options = ["A", "T", "C", "G"];
+          let seq = "ATG";
+          for (let i = 0; i < this.length; i++) {
+            seq += options[Math.floor(Math.random() * options.length)];
+          } 
+          let stop = ["TAG", "TAA", "TGA"];
+          return seq + stop[Math.floor(Math.random() * stop.length)];;
+        }
+
+        translate_protein() {
+          const aminoDict = {
+            "TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
+            "CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
+            "ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
+            "GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
+            "TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
+            "CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
+            "ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
+            "GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
+            "TAT": "Y", "TAC": "Y", "TAA": "*", "TAG": "*",
+            "CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
+            "AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
+            "GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
+            "TGT": "C", "TGC": "C", "TGA": "*", "TGG": "W",
+            "CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
+            "AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
+            "GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G"
+          };
+
+          let protein = "";
+          for (let i = 0; i < this.sequence.length - 2; i += 3) {
+            protein += aminoDict[this.sequence.substring(i, i+3)];
+          }
+          return protein;
+        }
+
+        get_percentages() {
+          let count = [0, 0, 0, 0]
+          let percentages = [];
+          for (let i = 0; i < this.sequence.length; i++) {
+            let char = this.sequence.charAt(i);
+            if (char == "A") count[0]++;
+            if (char == "T") count[1]++;
+            if (char == "C") count[2]++;
+            if (char == "G") count[3]++;
+          }
+          
+          for (let i = 0; i < count.length; i++) {
+            let percentage = count[i] / this.sequence.length * 100;
+            percentages.push(percentage.toFixed(2));
+          }
+          return percentages;
+        }
+
+        get_correct_length(length) {
+          if (length % 3 != 0) {
+            if (length < 0) {
+              length = 0;
+            } else {
+              if ((length - 1) % 3 == 0) {
+                length -= 1;
+              } else {
+                length -= 2;
+              }
+            }
+          }
+          return length;      
+        }
+
+        get_sequence() {
+          return this.sequence;
+        }
+      } 
+
+      function setValues(length) {
+        let sequence = new Sequence(length);
+        let percentage = sequence.get_percentages();
+
+        // Select the required elements
+        let sequenceDisplay = document.querySelector("#sequence");
+        let percentageDisplay = document.querySelector("#percentages");
+        let gcDisplay = document.querySelector("#gc");
+        let proteinDisplay = document.querySelector("#protein");
+
+        // Fill in their contents
+        sequenceDisplay.textContent = `${sequence.get_sequence()}`;
+        percentageDisplay.textContent = `A: ${percentage[0]}%, T: ${percentage[1]}%,
+                                          C: ${percentage[2]}%, G: ${percentage[3]}%`;
+        gcDisplay.textContent = `${parseFloat(percentage[2])+ parseFloat(percentage[3])}%`;
+        proteinDisplay.textContent = sequence.translate_protein();
+        return sequence;
+      }
+
+      async function applyEnzyme(name, sequence) {
+        let urls = [];
+        name.split(',').forEach(element => {
+          urls.push(`http://localhost:8000/https://bioinf.nl/enzyme/api/v1/enzyme/${element}`)
+        });
+        var promises = urls.map(url => fetch(url).then(response => response.json()));
+        Promise.all(promises)
+          .then(results => {
+            var resultList = [];
+
+            results.forEach(result => {
+              resultList.push(result);
+            });
+
+            // In case there is no good enzyme create error
+            let len = 0;
+            resultList.forEach(element => {
+              if (element.site[0] != null) len++;
+            })
+            if (len === 0) {
+                document.getElementById("error").textContent = "This enzyme does not exist!"
+            }
+
+            // clean previous enzymes again in case fetch is later and it duplicates
+            var div = document.getElementById('multipleEnzymes'); 
+            div.innerHTML = '';
+
+            let siteDiv = document.getElementById("multipleEnzymes");
+            let allPositionsDict = {};
+            resultList.forEach(element => {
+              if (element.site[0] === null) return;
+              let nameH = document.createElement('h3');
+              nameH.textContent = `${element.name} (${element.synonym})`;
+              siteDiv.appendChild(nameH);
+              
+              let sitePosDict = {};
+              element.site.forEach(ele => {
+                ele = ele.replace('^', '');
+                let siteP = document.createElement('p');
+                siteP.textContent = `${ele}`;
+                siteDiv.appendChild(siteP);
+
+                // Find all positions in sequence
+                var positions = [];
+                var index = sequence.indexOf(ele);
+                while (index !== -1) {
+                  positions.push(index);
+                  index = sequence.indexOf(ele, index + 1);
+                }
+                sitePosDict[ele] = positions;
+              });
+              allPositionsDict[element.name] = sitePosDict;
+            });
+
+
+            // Logging results
+            let allPositions = {}
+            Object.keys(allPositionsDict).forEach(name => {
+              Object.keys(allPositionsDict[name]).forEach(site => {
+                if (allPoscmditionsDict[name][site].length < 1) return;
+                console.log(`${name}'s site '${site}' is present in the sequence (position(s) ${allPositionsDict[name][site].join(', ')})`)
+                allPositionsDict[name][site].forEach(pos => {
+                  allPositions[pos] = site.length;
+                })
+              })
+            })
+
+            // Marking them blue in the sequence
+            var sequenceDisplay = document.getElementById('sequence');
+
+            var coloredText = '';
+            var lastIndex = 0;
+            Object.entries(allPositions).forEach(([startIndex, length]) => {
+              // Add the uncolored portion of text
+              coloredText += sequence.substring(lastIndex, startIndex);
+
+              // Wrap the colored portion of text in a span with the "highlight" class
+              coloredText += '<span class="highlight">' + sequence.substr(startIndex, length) + '</span>';
+
+              lastIndex = startIndex + length;
+            });
+
+            // Add the remaining uncolored portion of text
+            coloredText += sequence.substring(lastIndex);
+
+            sequenceDisplay.innerHTML = coloredText;
+
+            document.getElementById("sequence").style.color = "rgba(104, 178, 100, 0.4)"
+
+          })
+          .catch(error => {
+            console.log('Error:', error);
+            document.getElementById("error").innerText = "You need to run this with node.js or other fixes you dummy!!!!!!!!"
+          });
+      }
+
+      document.getElementById('sequenceForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent form submission
+
+        let sequenceLength = document.getElementById('sequenceLength').value;
+        sequence = setValues(sequenceLength).sequence;
+        document.getElementById("sequence").style.color = "rgba(104, 178, 100, 1)"
+
+        let enzymeCuttingElement = document.getElementById('enzymeCutting');
+        enzymeCuttingElement.classList.remove('hidden');
+      });
+
+      document.getElementById('enzymeForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent form submission
+
+        let enzymeValue = document.getElementById('enzymeValue').value;
+        document.getElementById('error').textContent = ``;
+
+        // clean previous enzymes
+        var div = document.getElementById('multipleEnzymes'); 
+        div.innerHTML = '';
+
+        applyEnzyme(enzymeValue, sequence);
+      
+      });
+    </script>
+    <style>
+
+    .hidden {
+      display: none;
+    }
+
+    #sequence {
+      color: rgba(104, 178, 100);
+      max-width: 80ch;
+      width: 100%;
+      overflow-wrap: break-word;
+    }
+
+    #protein {
+      max-width: 80ch;
+      width: 100%;
+      overflow-wrap: break-word;
+    }
+
+    table {
+      table-layout: fixed;
+      width: 100%;
+      border-collapse: collapse;
+      border: 3px solid rgb(138, 251, 132);
+    }
+
+    thead td:nth-child(1) {
+      width: 30%;
+    }
+
+    thead td:nth-child(2) {
+      width: 20%;
+    }
+
+    thead td:nth-child(3) {
+      width: 15%;
+    }
+
+    thead td:nth-child(4) {
+      width: 35%;
+    }
+
+    th,
+    td {
+      padding: 20px;
+    }
+
+    body {
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    .btn {
+      background-color: rgb(104, 178, 100);
+      border-radius:25px;
+      border: none;
+      color: white;
+      padding: 5px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+      transition: background-color 0.5s ease;
+    }
+
+    .btn:hover {
+      background-color: gray;
+    }
+
+    .enzyme-btn {
+      background-color: rgb(50, 100, 180);
+    }
+
+    #enzymeTitle {
+      margin-top: 4rem;
+    }
+
+    #error {
+      color: red;
+    }
+
+    #enzymeName, .isBlue {
+      color: rgb(50, 100, 180);
+    }
+
+    .highlight {
+      color: rgb(50, 100, 180);
+    }
+
+    </style>
+
+
+</body></html>
