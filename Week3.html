@@ -1,6 +1,6 @@
 <!-- saved from url=(0060)https://bioinf.nl/~marcelk/fewt/examples/wk1-assignment.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-    <title>Week 2</title>
+    <title>Week 3</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">    
@@ -35,10 +35,20 @@
       <h2 id="enzymeTitle">Enzyme cutting</h2>
       <form id="enzymeForm">
         <label for="enzymeName">Enzyme:</label>
-        <input type="text" id="enzymeValue" name="enzymeValue" required>
+        <select name="enzymeValue" id="enzymeValue">
+            <option value="AprI">AprI</option>
+            <option value="BamHI">BamHI</option>
+            <option value="EcoRI">EcoRI</option>
+            <option value="EcoRII">EcoRII</option>
+            <option value="HindIII">HindIII</option>
+            <option value="PstI">PstI</option>
+            <option value="SacI">SacI</option>
+            <option value="TaqI">TaqI</option>
+            <option value="XbaI">XbaI</option>
+        </select>
         <input type="submit" value="Search" class="enzyme-btn btn">
       </form>
-
+      <p id="loading"></p>
       <p id="error"></p>
       <div id="multipleEnzymes" class="isBlue"></div>
     </div>
@@ -149,9 +159,10 @@
       }
 
       async function applyEnzyme(name, sequence) {
+        document.getElementById("loading").innerText = "Loading..";
         let urls = [];
         name.split(',').forEach(element => {
-          urls.push(`http://localhost:8000/https://bioinf.nl/enzyme/api/v1/enzyme/${element}`)
+          urls.push(`https://bioinf.mocklab.io/api/v2/enzymes/${element}`)
         });
         var promises = urls.map(url => fetch(url).then(response => response.json()));
         Promise.all(promises)
@@ -200,6 +211,7 @@
                 sitePosDict[ele] = positions;
               });
               allPositionsDict[element.name] = sitePosDict;
+              document.getElementById("loading").innerText = "";
             });
 
 
@@ -240,7 +252,8 @@
           })
           .catch(error => {
             console.log('Error:', error);
-            document.getElementById("error").innerText = "You need to run this with node.js or other fixes you dummy!!!!!!!!"
+            document.getElementById("error").innerText = "Error while fetching, This Enzyme can't be loaded in!"
+            document.getElementById("loading").innerText = "";
           });
       }
 
@@ -357,6 +370,10 @@
 
     .highlight {
       color: rgb(50, 100, 180);
+    }
+
+    #loading {
+        color: rgb(50, 100, 180);
     }
 
     </style>
